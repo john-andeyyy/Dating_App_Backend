@@ -4,7 +4,6 @@ const PORT = 3000;
 const cors = require("cors");
 const { Server } = require('socket.io');
 const http = require('http');
-
 require('./Configuration/Database');
 
 app.use(cors());
@@ -13,6 +12,7 @@ app.use(express.json());
 // Create HTTP server para makabit si socket.io
 const server = http.createServer(app);
 
+// Initialize Socket.io server 
 const io = new Server(server, {
     cors: {
         origin: "*",
@@ -20,12 +20,7 @@ const io = new Server(server, {
     }
 });
 
-// const { init } = require("./Utils/Notifications");
-// init(io)
 module.exports.io = io;
-
-
-
 
 app.use((req, res, next) => {
     req.io = io;
@@ -35,7 +30,7 @@ app.get('/', (req, res) => {
     res.send('Hello from Express backend!');
 });
 
-// Routes
+// Import and use routes 
 const AuthRoutes = require('./Routes/UserRoutes');
 app.use('/user', AuthRoutes);
 const Message = require('./Routes/Message');
@@ -44,7 +39,7 @@ const Matching = require('./Routes/Matching');
 app.use('/Matching', Matching);
 
 io.on("connection", (socket) => {
-    // console.log("⚡ User connected:", socket.id);
+    // console.log(" User connected:", socket.id);
 
     socket.on("join", (userId) => {
         if (!userId) return;
@@ -79,7 +74,7 @@ io.on("connection", (socket) => {
     });
 });
 
-
+// Start the server
 server.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });

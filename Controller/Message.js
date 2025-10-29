@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const IsMatched = require('../Model/IsMatchSchema');
 const { SocketNotification } = require('../Utils/Notifications')
 
-
+// Send Message from one user to another by senderId and receiverId
 exports.Send = async (req, res) => {
     try {
         const { senderId, receiverId, message } = req.body;
@@ -21,7 +21,7 @@ exports.Send = async (req, res) => {
 
         const newMessage = await Message.create({ senderId, receiverId, message });
 
-        // Emit to socket room
+        // Emit to socket room 
         const room = [senderId, receiverId].sort().join("_");
         req.io.to(room).emit("receive_message", {
             senderId,
@@ -37,7 +37,6 @@ exports.Send = async (req, res) => {
         //     receiverId
         // });
 
-
         return res.status(200).json({
             message: "Message sent successfully",
             data: newMessage
@@ -48,7 +47,7 @@ exports.Send = async (req, res) => {
     }
 };
 
-
+// Get Conversation Messages between two users by senderId and receiverId
 exports.GetConvoMessage = async (req, res) => {
     try {
         const { senderId, receiverId } = req.params;
@@ -57,6 +56,7 @@ exports.GetConvoMessage = async (req, res) => {
             return res.status(400).json({ message: "senderId and receiverId are required" });
         }
 
+        // Fetch messages where senderId and receiverId match 
         const messages = await Message.find({
             $or: [
                 { senderId, receiverId },
@@ -71,7 +71,8 @@ exports.GetConvoMessage = async (req, res) => {
         if (!messages.length) {
             return res.status(204).json({ message: "No messages found" });
         }
-        
+
+        // Format messages with date and time fields 
         const formattedMessages = messages
             .filter(msg => msg.senderId && msg.receiverId)
             .map(msg => ({
@@ -107,7 +108,7 @@ exports.GetConvoMessage = async (req, res) => {
         return res.status(500).json({ message: error.message });
     }
 };
-
+// Get Matched List with last message by Userid of the user
 exports.MatchedListMsg = async (req, res) => {
     console.log("MatchedListMsg");
 
@@ -128,6 +129,7 @@ exports.MatchedListMsg = async (req, res) => {
 
         const userIds = matchedUsers.map((u) => u._id);
 
+        // Fetch last messages for each matched user
         const messages = await Message.aggregate([
             {
                 $match: {

@@ -4,13 +4,13 @@ const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_Refresh = process.env.JWT_Refresh;
 
-
+// Signup a new user 
 exports.Signup = async (req, res) => {
     console.warn("Signup");
 
     try {
         const { Email, Password, Age, bio, Name, Latitude, Longitude } = req.body;
-        console.log(req.body);
+        // console.log(req.body);
         const imgFile = req.file;
 
         let existingEmail = await User.findOne({ Email: Email });
@@ -42,10 +42,10 @@ exports.Signup = async (req, res) => {
     }
 };
 
-
+// Login an existing user using Email and Password
 exports.Login = async (req, res) => {
     console.log('Login');
-    const { Email, Password } = req.body; // username to be email
+    const { Email, Password } = req.body;
     try {
         let UserData = await User.findOne({
             $or: [
@@ -61,9 +61,9 @@ exports.Login = async (req, res) => {
             return res.status(400).json({ message: "Invalid credentials" });
         }
 
+        // Generate JWT tokens 
         const AccessToken = jwt.sign({ id: UserData._id }, JWT_SECRET, { expiresIn: "1m" });
         const Refresh_Token = jwt.sign({ id: UserData._id }, JWT_Refresh, { expiresIn: '1d' });
-
 
         res.status(200).json({
             message: "Login Successful",
@@ -80,6 +80,80 @@ exports.Login = async (req, res) => {
     }
 }
 
+// Retrieve user profile by Userid
+exports.RetrieveProfile = async (req, res) => {
+    const { Userid } = req.params;
+
+    try {
+        let UserData = await User.findById(Userid)
+        res.status(200).json({
+            message: "retrive Successful",
+            Data: UserData
+        });
+
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+        console.error(`Error: ${error.message}`);
+    }
+}
+// Change Password for user by Id
+exports.ChangePass = async (req, res) => {
+    const { Id, NewPass, Password } = req.body;
+    let UserData = await User.findById(Id);
+    if (!UserData) return res.status(400).json({ message: "User not found" });
+
+    try {
+        const Ismatched = await bcrypt.compare(Password, UserData.Password);
+        if (!Ismatched) {
+            return res.status(400).json({ message: "New and old Password Not Match" });
+        }
+        Ismatched.Password = await bcrypt.hash(NewPass, 12);
+        Ismatched.save;
+
+        res.status(200).json({
+            message: "Change Passoword Successful",
+            // Data: UserData
+        });
+
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+        console.error(`Error: ${error.message}`);
+    }
+}
+// Update user profile by Id 
+exports.update = async (req, res) => {
+    console.log('update');
+
+    try {
+        const { Id, Name, Email, Age, bio } = req.body;
+        console.log(req.body);
+
+        const imgFile = req.file;
+        let UserData = await User.findById(Id);
+        if (!UserData) return res.status(400).json({ message: "User not found" });
+
+        UserData.Email = Email;
+        UserData.Age = Age;
+        UserData.bio = bio;
+        UserData.Name = Name;
+        if (imgFile) UserData.Image = imgFile.buffer;
+
+        UserData.save();
+        return res.status(200).json({ message: "Successfully updated" });
+
+
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+        console.error(`Error: ${error.message}`);
+    }
+}
+
+
+//? ////////////////////////////////////////////////////////////////////////////////////////
+//! JSON WEB TOKEN REFRESH LOGIC
+//? ////////////////////////////////////////////////////////////////////////////////////////
+
+// Verify JWT token validity
 exports.CheckToken = async (req, res) => {
     console.warn("CheckToken");
 
@@ -104,8 +178,7 @@ exports.CheckToken = async (req, res) => {
     }
 };
 
-
-
+// Refresh JWT access token using refresh token
 exports.RefreshToken = async (req, res) => {
     console.warn("RefreshToken");
 
@@ -127,73 +200,3 @@ exports.RefreshToken = async (req, res) => {
         return res.status(200).json({ accessToken: newAccessToken });
     });
 };
-
-exports.RetrieveProfile = async (req, res) => {
-    const { Userid } = req.params;
-
-    try {
-        let UserData = await User.findById(Userid)
-        res.status(200).json({
-            message: "retrive Successful",
-            Data: UserData
-        });
-
-    } catch (error) {
-        res.status(400).json({ message: error.message });
-        console.error(`Error: ${error.message}`);
-    }
-}
-
-exports.ChangePass = async (req, res) => {
-    const { Id, NewPass, Password } = req.body;
-    let UserData = await User.findById(Id);
-    if (!UserData) return res.status(400).json({ message: "User not found" });
-
-    try {
-        const Ismatched = await bcrypt.compare(Password, UserData.Password);
-        if (!Ismatched) {
-            return res.status(400).json({ message: "New and old Password Not Match" });
-        }
-        Ismatched.Password = await bcrypt.hash(NewPass, 12);
-        Ismatched.save;
-
-        res.status(200).json({
-            message: "Change Passoword Successful",
-            // Data: UserData
-        });
-
-    } catch (error) {
-        res.status(400).json({ message: error.message });
-        console.error(`Error: ${error.message}`);
-    }
-}
-exports.update = async (req, res) => {
-    console.log('update');
-
-    try {
-        const { Id, Name, Email, Age, bio } = req.body;
-        console.log(req.body);
-
-        const imgFile = req.file;
-
-
-        let UserData = await User.findById(Id);
-
-
-        if (!UserData) return res.status(400).json({ message: "User not found" });
-
-        UserData.Email = Email;
-        UserData.Age = Age;
-        UserData.bio = bio;
-        UserData.Name = Name;
-        if (imgFile) UserData.Image = imgFile.buffer;
-
-        UserData.save();
-        return res.status(200).json({ message: "Successfully updated" });
-
-
-    } catch (error) {
-        res.status(400).json({ message: error.message });
-        console.error(`Error: ${error.message}`);
-    }
-}

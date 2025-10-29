@@ -1,21 +1,20 @@
 const IsMatched = require('../Model/IsMatchSchema');
+const mongoose = require('mongoose');
 const User = require('../Model/UserSchema')
 const { SocketNotification } = require('../Utils/Notifications')
 const { SOCKET_SendNewData_NewMatch } = require('../Utils/SocketNewData')
 
+//? v1 Swipe Left or Right
 exports.Swipe_Left_or_Right = async (req, res) => {
-
+    // console.warn("Swipe_Left_or_Right");
     const { Userid, MatchingId, IsMatch } = req.body;
-
     try {
-
         const user = await User.findById(Userid)
         const userlike = await User.findById(MatchingId)
 
         if (!user || !userlike) {
             return res.status(404).json({ message: "User not found" });
         }
-
         const isokay = await IsMatched.create({
             userId: Userid,
             userSuggestion: MatchingId,
@@ -33,12 +32,11 @@ exports.Swipe_Left_or_Right = async (req, res) => {
 
 }
 
+// Swipe Left or Right
+// Like or Dislike
 exports.Like_unlike = async (req, res) => {
-    console.log("Like_unlike");
-
+    // console.warn("Like_unlike");
     const { Userid, MatchingId, isLike } = req.body;
-    // console.log(req.body);
-
 
     try {
         let record = await IsMatched.findOne({ userId: Userid, userSuggestion: MatchingId });
@@ -86,9 +84,10 @@ exports.Like_unlike = async (req, res) => {
     }
 };
 
+// Unmatch a user 
 exports.unMatch = async (req, res) => {
+    // console.warn("unlike");
     const { Userid, MatchingId } = req.body;
-    console.warn("unlike");
     try {
         const unlike = IsMatched.find({ userId: Userid, userSuggestion: MatchingId })
         if (!unlike)
@@ -115,6 +114,7 @@ exports.unMatch = async (req, res) => {
 
 }
 
+// Get Matched List by Userid of the user
 exports.MatchedList = async (req, res) => {
     const { Userid } = req.params;
 
@@ -143,8 +143,7 @@ exports.MatchedList = async (req, res) => {
     }
 };
 
-const mongoose = require('mongoose');
-
+// Helper function to calculate distance between two coordinates
 function getDistance(lat1, lon1, lat2, lon2) {
     const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -158,16 +157,15 @@ function getDistance(lat1, lon1, lat2, lon2) {
     return R * c;
 }
 
-
-exports.list = async (req, res) => {
+// get random list of users for matching
+exports.Random = async (req, res) => {
     console.warn("list");
 
     const { userId } = req.params;
     const minAge = req.query.minAge ? parseInt(req.query.minAge) : null;
     const maxAge = req.query.maxAge ? parseInt(req.query.maxAge) : null;
     const { longitude, latitude, radius } = req.query;
-    // console.log("Filters:", { longitude, latitude, radius });
-console.log("Filters:", { minAge, maxAge, longitude, latitude, radius });
+    // console.log("Filters:", { minAge, maxAge, longitude, latitude, radius });
 
 
     try {
