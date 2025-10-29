@@ -62,7 +62,7 @@ exports.Login = async (req, res) => {
         }
 
         // Generate JWT tokens 
-        const AccessToken = jwt.sign({ id: UserData._id }, JWT_SECRET, { expiresIn: "1m" });
+        const AccessToken = jwt.sign({ id: UserData._id }, JWT_SECRET, { expiresIn: "1hr" });
         const Refresh_Token = jwt.sign({ id: UserData._id }, JWT_Refresh, { expiresIn: '1d' });
 
         res.status(200).json({

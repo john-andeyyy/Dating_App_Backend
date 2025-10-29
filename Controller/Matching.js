@@ -68,6 +68,7 @@ exports.Like_unlike = async (req, res) => {
                 await reverseRecord.save();
                 SocketNotification(MatchingId, `New Match`)
                 SOCKET_SendNewData_NewMatch(Userid, MatchingId,)
+                SOCKET_SendNewData_NewMatch(MatchingId, Userid);
 
             }
         }
@@ -83,6 +84,7 @@ exports.Like_unlike = async (req, res) => {
         return res.status(400).json({ message: error.message });
     }
 };
+const { io } = require("../server");
 
 // Unmatch a user 
 exports.unMatch = async (req, res) => {
@@ -102,6 +104,7 @@ exports.unMatch = async (req, res) => {
             userId: MatchingId,
             userSuggestion: Userid
         });
+        io.to(MatchingId).emit("userUnmatched", { userId: Userid });
 
         if (isokay)
             return res.status(200).json({ Message: "Successfull unlike" })
