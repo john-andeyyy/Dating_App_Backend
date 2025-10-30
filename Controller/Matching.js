@@ -167,42 +167,50 @@ exports.Random = async (req, res) => {
     const { userId } = req.params;
     const minAge = req.query.minAge ? parseInt(req.query.minAge) : null;
     const maxAge = req.query.maxAge ? parseInt(req.query.maxAge) : null;
-    const { longitude, latitude, radius } = req.query;
-    // console.log("Filters:", { minAge, maxAge, longitude, latitude, radius });
+    const { longitude, latitude, radius, interestedIn } = req.query;
 
+    // console.log("Filters:", { minAge, maxAge, longitude, latitude, radius, interestedIn });
 
     try {
-        const interactedUsers = await IsMatched.find({ userId }).distinct('userSuggestion');
-        const excludeIds = [userId, ...interactedUsers].map(id => new mongoose.Types.ObjectId(id));
+        // get users the current user already interacted with
+        const interactedUsers = await IsMatched.find({ userId }).distinct("userSuggestion");
+        const excludeIds = [userId, ...interactedUsers].map((id) => new mongoose.Types.ObjectId(id));
 
-        const usersFromDb = await User.find({ _id: { $nin: excludeIds } }).select('-Password');
+        // exclude current user and previously interacted users
+        const usersFromDb = await User.find({ _id: { $nin: excludeIds } }).select("-Password");
 
-        let filteredUsers = usersFromDb.map(user => {
-            return {
-                ...user.toObject(),
-                age: user.Age,
-                Latitude: parseFloat(user.Latitude),
-                Longitude: parseFloat(user.Longitude)
-            };
-        });
+        // convert and normalize user data
+        let filteredUsers = usersFromDb.map((user) => ({
+            ...user.toObject(),
+            age: user.Age,
+            Latitude: parseFloat(user.Latitude),
+            Longitude: parseFloat(user.Longitude),
+            gender: user.gender?.toLowerCase(),
+        }));
 
-        // Apply age filter
-        if (minAge !== null) filteredUsers = filteredUsers.filter(user => user.age >= minAge);
-        if (maxAge !== null) filteredUsers = filteredUsers.filter(user => user.age <= maxAge);
+        //  Filter by age range
+        if (minAge !== null) filteredUsers = filteredUsers.filter((u) => u.age >= minAge);
+        if (maxAge !== null) filteredUsers = filteredUsers.filter((u) => u.age <= maxAge);
 
-        // Apply distance filter if latitude, longitude, and radius provided
+        //  Filter by distance if coordinates provided
         if (latitude && longitude && radius) {
             const userLat = parseFloat(latitude);
             const userLng = parseFloat(longitude);
-            const maxDistance = radius ? parseFloat(radius) : 10;
+            const maxDistance = parseFloat(radius);
 
-            filteredUsers = filteredUsers.filter(user => {
-                if (!user.Latitude || !user.Longitude) return false;
-                const distance = getDistance(userLat, userLng, user.Latitude, user.Longitude);
+            filteredUsers = filteredUsers.filter((u) => {
+                if (!u.Latitude || !u.Longitude) return false;
+                const distance = getDistance(userLat, userLng, u.Latitude, u.Longitude);
                 return distance <= maxDistance;
             });
         }
 
+        // Filter by interestedIn (gender)
+        if (interestedIn && interestedIn.toLowerCase() !== "all") {
+            const genderFilter = interestedIn.toLowerCase();
+            filteredUsers = filteredUsers.filter((u) => u.gender === genderFilter);
+        }
+        
         const sample = filteredUsers.sort(() => 0.5 - Math.random()).slice(0, 10);
 
         if (!sample.length) {
@@ -210,12 +218,15 @@ exports.Random = async (req, res) => {
             return res.status(204).json({ message: "No available matches" });
         }
 
-        res.status(200).json({ message: "Successfully retrieved random matches", data: sample });
-
+        return res.status(200).json({
+            message: "Successfully retrieved random matches",
+            data: sample,
+        });
     } catch (error) {
         console.error(`Error fetching matches: ${error.message}`);
         res.status(500).json({ message: "Server error" });
     }
 };
+
 
 

@@ -8,6 +8,8 @@ const User = new mongoose.Schema({
     Age: { type: Number, default: 0, required: true },
     bio: { type: String, default: '' },
     Image: { type: Buffer, default: null },
+    gender: { type: String, default: '' },
+    interestedIn: { type: String, default: '' },
     
     //! location fields
     Longitude: { type: String, default: '' },

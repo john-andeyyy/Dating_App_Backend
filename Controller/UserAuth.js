@@ -9,8 +9,8 @@ exports.Signup = async (req, res) => {
     console.warn("Signup");
 
     try {
-        const { Email, Password, Age, bio, Name, Latitude, Longitude } = req.body;
-        // console.log(req.body);
+        const { Email, Password, Age, bio, Name, Latitude, Longitude, interestedIn, gender } = req.body;
+        console.log(req.body);
         const imgFile = req.file;
 
         let existingEmail = await User.findOne({ Email: Email });
@@ -25,6 +25,8 @@ exports.Signup = async (req, res) => {
             Age: Age || 0,
             bio: bio || "",
             Name,
+            interestedIn,
+            gender,
             Latitude,
             Longitude
         });
@@ -125,7 +127,7 @@ exports.update = async (req, res) => {
     console.log('update');
 
     try {
-        const { Id, Name, Email, Age, bio } = req.body;
+        const { Id, Name, Email, Age, bio, interestedIn, gender } = req.body;
         console.log(req.body);
 
         const imgFile = req.file;
@@ -136,6 +138,8 @@ exports.update = async (req, res) => {
         UserData.Age = Age;
         UserData.bio = bio;
         UserData.Name = Name;
+        UserData.interestedIn = interestedIn;
+        UserData.gender = gender;
         if (imgFile) UserData.Image = imgFile.buffer;
 
         UserData.save();
