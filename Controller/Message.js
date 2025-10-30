@@ -18,6 +18,10 @@ exports.Send = async (req, res) => {
         if (!receiverExists) {
             return res.status(404).json({ message: "Receiver not found" });
         }
+        const messageSender = await User.findById(senderId);
+        if (!receiverExists) {
+            return res.status(404).json({ message: "Receiver not found" });
+        }
 
         const newMessage = await Message.create({ senderId, receiverId, message });
 
@@ -30,13 +34,15 @@ exports.Send = async (req, res) => {
             createdAt: newMessage.createdAt
         });
 
-        SocketNotification(receiverId.toString(), `New Message from ${receiverExists.Name}`)
+        SocketNotification(receiverId.toString(), `New Message from ${messageSender.Name}`)
         // req.io.to(receiverId.toString()).emit("New_Notif", {
         //     message: `New Message from ${receiverExists.Name}`,
         //     senderId,
         //     receiverId
         // });
 
+        console.log(`New Message from ${receiverExists.Name}`);
+        
         return res.status(200).json({
             message: "Message sent successfully",
             data: newMessage

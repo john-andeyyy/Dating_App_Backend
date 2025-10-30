@@ -250,6 +250,7 @@ exports.Random = async (req, res) => {
             console.log("No available matches");
             return res.status(204).json({ message: "No available matches" });
         }
+        // console.log(sample);
 
         return res.status(200).json({
             message: "Successfully retrieved random matches",
