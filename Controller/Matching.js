@@ -86,8 +86,8 @@ exports.Like_unlike = async (req, res) => {
 };
 const { io } = require("../server");
 
-// Unmatch a user 
-exports.unMatch = async (req, res) => {
+// v1 Unmatch a user 
+exports.unMatchv1 = async (req, res) => {
     // console.warn("unlike");
     const { Userid, MatchingId } = req.body;
     try {
@@ -116,6 +116,39 @@ exports.unMatch = async (req, res) => {
     }
 
 }
+
+// Unmatch a user (like setting isLike to false)
+exports.unMatch = async (req, res) => {
+    const { Userid, MatchingId } = req.body;
+
+    try {
+        // Find the existing match records
+        const record = await IsMatched.findOne({ userId: Userid, userSuggestion: MatchingId });
+        const reverseRecord = await IsMatched.findOne({ userId: MatchingId, userSuggestion: Userid });
+
+        if (!record) return res.status(404).json({ message: "User not found" });
+
+        // Set isLike and isMatch to false
+        record.isLike = false;
+        record.isMatch = false;
+        await record.save();
+
+        if (reverseRecord) {
+            reverseRecord.isMatch = false; // reverse side should also unmatch
+            await reverseRecord.save();
+        }
+
+        // Notify via socket
+        io.to(MatchingId).emit("userUnmatched", { userId: Userid });
+
+        return res.status(200).json({ message: "Successfully unmatched" });
+
+    } catch (error) {
+        console.error(`Error: ${error.message}`);
+        return res.status(400).json({ message: error.message });
+    }
+};
+
 
 // Get Matched List by Userid of the user
 exports.MatchedList = async (req, res) => {
@@ -210,7 +243,7 @@ exports.Random = async (req, res) => {
             const genderFilter = interestedIn.toLowerCase();
             filteredUsers = filteredUsers.filter((u) => u.gender === genderFilter);
         }
-        
+
         const sample = filteredUsers.sort(() => 0.5 - Math.random()).slice(0, 10);
 
         if (!sample.length) {
