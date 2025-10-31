@@ -107,7 +107,7 @@ exports.ChangePass = async (req, res) => {
     try {
         const Ismatched = await bcrypt.compare(Password, UserData.Password);
         if (!Ismatched) {
-            return res.status(400).json({ message: "New and old Password Not Match" });
+            return res.status(400).json({ message: "Current password does not match." });
         }
         Ismatched.Password = await bcrypt.hash(NewPass, 12);
         Ismatched.save;
