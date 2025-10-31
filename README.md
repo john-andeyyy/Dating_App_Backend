@@ -18,7 +18,7 @@ The backend handles the core functionalities of the MatchConnect app, including:
 - **Database**: MongoDB
 - **Authentication**: JSON Web Tokens (JWT)
 - **Real-time Communication**: Socket.IO
-- **Deployment**: Render
+- **Deployment**: Heroku
 
 ## Features
 
