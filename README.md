@@ -1,10 +1,10 @@
-# MatchConnect Backend
+# Sparked Backend
 
-This repository contains the backend implementation for MatchConnect, a web-based dating app. The backend is built with Node.js and Express.js, providing APIs for user authentication, profile management, matching, messaging, and notifications.
+This repository contains the backend implementation for Sparked, a web-based dating app. The backend is built with Node.js and Express.js, providing APIs for user authentication, profile management, matching, messaging, and notifications.
 
 ## Description
 
-The backend handles the core functionalities of the MatchConnect app, including:
+The backend handles the core functionalities of the Sparked app, including:
 
 - User authentication and authorization
 - Profile creation and management
